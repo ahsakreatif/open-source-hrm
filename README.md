@@ -1,6 +1,6 @@
 # 🇮🇩 Indonesian HRM System (Open Source)
 
-A modern, Laravel + FilamentPHP-based **Human Resource Management System** tailored for Indonesian businesses. This solution simplifies employee management, payroll (PAYE, NHIF, NSSF), attendance, and more — all in compliance with Indonesian labor laws.
+A modern, Laravel + FilamentPHP-based **Human Resource Management System** tailored for Indonesian businesses. This solution simplifies employee management, payroll (PPh 21, BPJS Ketenagakerjaan, BPJS Kesehatan), attendance, and more — all in compliance with Indonesian labor laws.
 
 <img src="img.png" alt="Open source HRM" style="max-width: 100%; border-radius: 8px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);" >
 
@@ -22,7 +22,7 @@ A modern, Laravel + FilamentPHP-based **Human Resource Management System** tailo
 
 ### ✅ Core Modules
 
--   **Employee Records** (with KRA PIN, NSSF, NHIF, etc.)
+-   **Employee Records** (with NPWP, BPJS Ketenagakerjaan, BPJS Kesehatan, etc.)
 -   **Departments & Positions**
 -   **Attendance Management**
 -   **Leave Management**
@@ -42,7 +42,7 @@ A modern, Laravel + FilamentPHP-based **Human Resource Management System** tailo
 - **Command-line tools** for bulk recap generation
 
 #### 💰 Payroll System
-- **Indonesian tax compliance** (PAYE, NHIF, NSSF)
+- **Indonesian tax compliance** (PPh 21, BPJS Ketenagakerjaan, BPJS Kesehatan)
 - **Attendance-based calculations** using recap data
 - **Multiple pay periods** support
 - **Status tracking** (pending, completed, calculated, cancelled)
@@ -59,7 +59,7 @@ A modern, Laravel + FilamentPHP-based **Human Resource Management System** tailo
 - **Comprehensive employee profiles** with Indonesian-specific fields
 - **Emergency contact information**
 - **Next of kin details**
-- **KRA PIN and national ID tracking**
+- **NPWP and national ID tracking**
 - **Department and position assignments**
 - **Active/inactive status management**
 
@@ -192,3 +192,50 @@ composer run dev
 [MIT license](LICENSE)
 
 Made with ❤️ for Indonesian businesses
+
+---
+
+## 📋 TODO - Indonesian Compliance Updates
+
+### 🔧 Database & Model Updates Needed
+
+- [ ] **Replace KRA PIN field with NPWP (Nomor Pokok Wajib Pajak)**
+  - Update `employees` table migration
+  - Update Employee model fillable fields
+  - Update EmployeeResource form and table columns
+  - Add NPWP validation rules
+
+- [ ] **Add Indonesian-specific tax fields**
+  - BPJS Ketenagakerjaan number
+  - BPJS Kesehatan number
+  - PPh 21 tax calculations
+  - JHT (Jaminan Hari Tua) contributions
+
+- [ ] **Update Payroll System**
+  - Implement PPh 21 calculation logic
+  - Add BPJS Ketenagakerjaan deductions
+  - Add BPJS Kesehatan deductions
+  - Add JHT contribution calculations
+  - Update payroll reports for Indonesian compliance
+
+- [ ] **Add Indonesian Labor Law Compliance**
+  - Minimum wage compliance
+  - Overtime calculations (Indonesian standards)
+  - Leave entitlements (Indonesian labor law)
+  - Severance pay calculations
+  - Working hours compliance
+
+### 🎯 Priority Implementation Order
+
+1. **High Priority**: NPWP field replacement and validation
+2. **High Priority**: BPJS number fields addition
+3. **Medium Priority**: PPh 21 calculation implementation
+4. **Medium Priority**: BPJS deduction calculations
+5. **Low Priority**: Additional Indonesian labor law features
+
+### 📝 Notes
+
+- Current system uses Kenyan tax systems (KRA PIN, NSSF, NHIF) which are not applicable to Indonesia
+- Need to implement Indonesian tax identification (NPWP) and social security systems (BPJS)
+- Payroll calculations need to follow Indonesian tax regulations
+- All tax and social security references should be updated to Indonesian equivalents
