@@ -61,7 +61,7 @@ class PositionResource extends Resource
 
                         Forms\Components\TextInput::make('salary')
                             ->numeric()
-                            ->prefix('$')
+                            ->prefix('IDR')
                             ->label('Salary')
                             ->placeholder('0.00'),
                     ])
@@ -90,7 +90,7 @@ class PositionResource extends Resource
 
                 Tables\Columns\TextColumn::make('salary')
                     ->label('Salary')
-                    ->money('USD')
+                    ->money('IDR')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('employees_count')
