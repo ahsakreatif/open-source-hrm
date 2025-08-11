@@ -30,6 +30,7 @@ class Employee extends Authenticatable
         'is_active',
         'department_id',
         'position_id',
+        'location_id',
         'next_of_kin_name',
         'next_of_kin_relationship',
         'next_of_kin_phone',
@@ -43,6 +44,8 @@ class Employee extends Authenticatable
         'termination_date' => 'date',
         'is_active' => 'boolean',
         'department_id' => 'integer',
+        'position_id' => 'integer',
+        'location_id' => 'integer',
         'email_verified_at' => 'datetime',
     ];
     protected $appends = [
@@ -88,6 +91,11 @@ class Employee extends Authenticatable
     public function position()
     {
         return $this->belongsTo(Position::class, 'position_id');
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
     }
 
 }

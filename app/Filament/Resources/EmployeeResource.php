@@ -165,6 +165,17 @@ class EmployeeResource extends Resource
                                 ])->id;
                             })
                             ->native(false),
+                        Select::make('location_id')
+                            ->relationship(
+                                name: 'location',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn(Builder $query) => $query->select('id', 'name')->orderBy('name', 'asc')
+                            )
+                            ->label('Location')
+                            ->searchable()
+                            ->placeholder('Select a location')
+                            ->preload()
+                            ->nullable(),
                         Select::make('employment_type')
                             ->options([
                                 'Permanent' => 'Permanent',

@@ -12,10 +12,12 @@ class Department extends Model
         'code',
         'description',
         'manager_id',
+        'location_id',
     ];
     // protected $with = ['employees'];
     protected $casts = [
         'manager_id' => 'integer',
+        'location_id' => 'integer',
     ];
 
     public function manager()
@@ -25,5 +27,10 @@ class Department extends Model
     public function employees()
     {
         return $this->hasMany(Employee::class, 'department_id');
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
     }
 }

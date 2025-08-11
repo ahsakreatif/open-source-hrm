@@ -34,6 +34,17 @@ class DepartmentResource extends Resource
                     ->maxLength(50)
                     ->label('Department Code')
                     ->placeholder('Enter department code'),
+                Forms\Components\Select::make('location_id')
+                    ->relationship(
+                        name: 'location',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn(Builder $query) => $query->select('id', 'name')->orderBy('name', 'asc')
+                    )
+                    ->label('Location')
+                    ->searchable()
+                    ->placeholder('Select a location')
+                    ->preload()
+                    ->nullable(),
                 Forms\Components\Textarea::make('description')
                     ->maxLength(500)
                     ->label('Description')
@@ -70,9 +81,12 @@ class DepartmentResource extends Resource
                     ->sortable()
                     ->limit(10)
                     ->label('Department Code'),
-                Tables\Columns\TextColumn::make('description')
-                    ->limit(50)
-                    ->label('Description'),
+                Tables\Columns\TextColumn::make('location_id')
+                    ->formatStateUsing(fn($record) => $record->location?->name ?? 'No Location')
+                    ->label('Location')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('manager_id')
                     ->formatStateUsing(fn($record) => $record->manager?->full_name ?? 'No Manager')
                     ->label('Manager')
