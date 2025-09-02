@@ -20,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Add Inertia middleware to web group
-        $this->app['router']->pushMiddlewareToGroup('web', \App\Http\Middleware\HandleInertiaRequests::class);
+        // Commented out due to Laravel 12 middleware configuration changes
+        // $this->app['router']->pushMiddlewareToGroup('web', \App\Http\Middleware\HandleInertiaRequests::class);
     }
 }

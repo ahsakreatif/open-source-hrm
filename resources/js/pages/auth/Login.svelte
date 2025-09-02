@@ -15,24 +15,39 @@
     interface Props {
         status?: string;
         canResetPassword: boolean;
-        role: string;
         isGoogleAuthEnabled: boolean;
     }
 
-    let { status, canResetPassword, role, isGoogleAuthEnabled }: Props = $props();
+    let { status, canResetPassword, isGoogleAuthEnabled }: Props = $props();
 
     const form = useForm({
         email: '',
         password: '',
         remember: false,
-        role: role ?? 'employee',
     });
 
 
     const submit = (e: Event) => {
         e.preventDefault();
-        $form.post(route('login'), {
-            onFinish: () => $form.reset('password'),
+
+        console.log('Form submitted with:', {
+            email: $form.email,
+            password: $form.password ? '***' : 'empty',
+            remember: $form.remember
+        });
+
+        // This app is only for employees, so always submit to employee login
+        $form.post(route('employee.login'), {
+            onFinish: () => {
+                console.log('Form submission finished');
+                $form.reset('password');
+            },
+            onError: (errors) => {
+                console.error('Form submission errors:', errors);
+            },
+            onSuccess: (page) => {
+                console.log('Form submission successful:', page);
+            }
         });
     };
 </script>
@@ -134,7 +149,7 @@
 
                     <div class="text-center text-sm text-muted-foreground">
                         {t('frontend.auth.login.dont_have_account')}
-                        <Link href={route('register')} data={ {role: $form.role } } tabindex={5}>{t('frontend.auth.login.sign_up')}</Link>
+                        <Link href={route('register')} data={ {role: 'employee' } } tabindex={5}>{t('frontend.auth.login.sign_up')}</Link>
                     </div>
                 </form>
             </AuthBase>

@@ -21,14 +21,6 @@ class HandleInertiaRequests extends Middleware
         // Get fresh user data (not cached)
         $user = $request->user();
 
-        // Load roles if user exists
-        if ($user) {
-            $user->load('roles');
-            $userData = $user->toFrontendArray();
-        } else {
-            $userData = null;
-        }
-
         // Debug: Check the current locale
         \Illuminate\Support\Facades\Log::info('HandleInertiaRequests - Current Locale: ' . app()->getLocale());
 
@@ -36,7 +28,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $userData,
+                'user' => $user,
             ],
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
@@ -51,6 +43,9 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'message' => fn () => $request->session()->get('message')
             ],
+
+            // Add CSRF token for forms
+            'csrf_token' => csrf_token(),
         ];
 
         return $shared;

@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\EmployeeAuthenticatedSessionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -21,6 +22,12 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    // Employee authentication routes
+    Route::get('employee/login', [EmployeeAuthenticatedSessionController::class, 'create'])
+        ->name('employee.login');
+
+    Route::post('employee/login', [EmployeeAuthenticatedSessionController::class, 'store']);
 
     // Google OAuth routes
     Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])
@@ -62,4 +69,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+});
+
+// Employee authenticated routes
+Route::middleware(['auth:employee', 'employee.auth'])->group(function () {
+    Route::post('employee/logout', [EmployeeAuthenticatedSessionController::class, 'destroy'])
+        ->name('employee.logout');
 });
