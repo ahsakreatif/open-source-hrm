@@ -4,7 +4,7 @@
   import { Button } from '../../components/ui/button';
   import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
   import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../../components/ui/dropdown-menu';
-  import { LogOut, User, Settings, Bell } from 'lucide-svelte';
+  import { LogOut, User, Settings, Bell, Home, Clock, FileText, Megaphone, Receipt } from 'lucide-svelte';
   import AppLogo from '../../components/AppLogo.svelte';
 
   export let user: any;
@@ -16,17 +16,17 @@
     router.post(route('employee.logout'));
   }
 
-  function getPageTitle(pathname: string): string {
-    const routes: Record<string, string> = {
-      '/dashboard': 'Dashboard',
-      '/employee/profile': 'Profile',
-      '/employee/attendance': 'Attendance',
-      '/employee/leave-requests': 'Leave Requests',
-      '/employee/announcements': 'Announcements',
-      '/employee/payslip': 'Payslip'
-    };
+  const navigationItems = [
+    { href: '/employee/dashboard', label: 'Dashboard', icon: Home, title: 'Dashboard' },
+    { href: '/employee/attendance', label: 'Attendance', icon: Clock, title: 'Attendance' },
+    { href: '/employee/leave-requests', label: 'Leave', icon: FileText, title: 'Leave Requests' },
+    { href: '/employee/announcements', label: 'Announcements', icon: Megaphone, title: 'Announcements' },
+    { href: '/employee/payslip', label: 'Payslip', icon: Receipt, title: 'Payslip' }
+  ];
 
-    return routes[pathname] || 'Employee Portal';
+  function getPageTitle(pathname: string): string {
+    const item = navigationItems.find(item => item.href === pathname);
+    return item?.title || 'Employee Portal';
   }
 
   $: pageTitle = getPageTitle(currentPage || '/dashboard');
@@ -44,6 +44,22 @@
         <h1 class="text-lg font-semibold text-gray-900">{pageTitle}</h1>
       </div>
     </div>
+
+    <!-- Navigation Menu (Desktop only) -->
+    <nav class="hidden md:flex items-center gap-1">
+      {#each navigationItems as item}
+        {@const Icon = item.icon}
+        <Button
+          variant={currentPage === item.href ? 'default' : 'ghost'}
+          size="sm"
+          onclick={() => router.visit(item.href)}
+          class="h-9 px-3"
+        >
+          <Icon class="h-4 w-4 mr-2" />
+          {item.label}
+        </Button>
+      {/each}
+    </nav>
 
     <!-- Right side - User menu and notifications -->
     <div class="flex items-center gap-3">
@@ -77,11 +93,11 @@
             </div>
           </div>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem onclick={() => router.visit('/employee/profile')}>
             <User class="mr-2 h-4 w-4" />
             <span>Profile</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onclick={() => router.visit('/employee/settings')}>
             <Settings class="mr-2 h-4 w-4" />
             <span>Settings</span>
           </DropdownMenuItem>

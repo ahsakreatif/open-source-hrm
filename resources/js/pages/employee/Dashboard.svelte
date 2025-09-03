@@ -19,6 +19,8 @@
     AlertCircle
   } from 'lucide-svelte';
   import EmployeeLayout from '../../layouts/employee/EmployeeLayout.svelte';
+  import { Breadcrumb, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, Item, BreadcrumbLink } from '../../components/ui/breadcrumb';
+  import { Link } from '@inertiajs/svelte';
 
   import { page } from '@inertiajs/svelte';
 
@@ -107,8 +109,18 @@
   <title>Employee Dashboard</title>
 </svelte:head>
 
-<EmployeeLayout {user}>
-    <div class="container mx-auto px-4 py-6 max-w-4xl">
+<EmployeeLayout {user} currentPage="/dashboard">
+  <svelte:fragment slot="breadcrumb">
+    <Breadcrumb>
+      <BreadcrumbList>
+        <Item>
+          <BreadcrumbPage>Dashboard</BreadcrumbPage>
+        </Item>
+      </BreadcrumbList>
+    </Breadcrumb>
+  </svelte:fragment>
+
+  <div class="container mx-auto px-4 py-6 max-w-4xl">
       <!-- Header Section -->
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 mb-2">Welcome back, {user?.first_name}!</h1>

@@ -5,6 +5,9 @@
   import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
   import { Badge } from '../../components/ui/badge';
   import { Alert, AlertDescription } from '../../components/ui/alert';
+  import { Breadcrumb, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, Item, BreadcrumbLink } from '../../components/ui/breadcrumb';
+  import { Link } from '@inertiajs/svelte';
+  import EmployeeLayout from '../../layouts/employee/EmployeeLayout.svelte';
   import {
     Clock,
     MapPin,
@@ -18,6 +21,10 @@
 
   export let user: any;
 
+  const breadcrumbItems = [
+    { title: 'Attendance', href: undefined }
+  ];
+
   let currentTime = '';
   let currentDate = '';
   let currentLocation: GeolocationPosition | null = null;
@@ -25,7 +32,7 @@
   let isLocationLoading = true;
   let isSubmitting = false;
   let attendanceStatus = 'not_checked_in';
-  let todayAttendance: { check_in_time?: string; check_out_time?: string } | null = null;
+  let todayAttendance: { check_in_time?: string; check_out_time?: string } = { check_in_time: '', check_out_time: '' };
   let officeLocation = { lat: -1.2921, lng: 36.8219 }; // Default: Nairobi coordinates
   let maxRadius = 100; // 100 meters
   let timeRestrictions = {
@@ -217,15 +224,34 @@
   <title>Attendance - Employee Portal</title>
 </svelte:head>
 
-<div class="container mx-auto px-4 py-6 max-w-2xl">
-  <!-- Header -->
-  <div class="mb-6">
-    <Button variant="ghost" on:click={() => router.visit('/employee/dashboard')} class="mb-4">
-      ← Back to Dashboard
-    </Button>
-    <h1 class="text-2xl font-bold text-gray-900 mb-2">Attendance</h1>
-    <p class="text-gray-600">Submit your daily check-in and check-out</p>
-  </div>
+<EmployeeLayout {user} currentPage="/employee/attendance">
+  <svelte:fragment slot="breadcrumb">
+    <Breadcrumb>
+      <BreadcrumbList>
+        {#each breadcrumbItems as item, index (index)}
+          <Item>
+            {#if index === breadcrumbItems.length - 1}
+              <BreadcrumbPage>{item.title}</BreadcrumbPage>
+            {:else}
+              <BreadcrumbLink>
+                <Link href={item.href ?? '#'}>{item.title}</Link>
+              </BreadcrumbLink>
+            {/if}
+          </Item>
+          {#if index !== breadcrumbItems.length - 1}
+            <BreadcrumbSeparator />
+          {/if}
+        {/each}
+      </BreadcrumbList>
+    </Breadcrumb>
+  </svelte:fragment>
+
+  <div class="container mx-auto px-4 py-6 max-w-2xl">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Attendance</h1>
+      <p class="text-gray-600">Submit your daily check-in and check-out</p>
+    </div>
 
   <!-- Current Time and Date -->
   <Card class="mb-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
@@ -256,7 +282,7 @@
           <AlertTriangle class="h-4 w-4" />
           <AlertDescription>{locationError}</AlertDescription>
         </Alert>
-        <Button on:click={refreshLocation} variant="outline" class="w-full">
+        <Button onclick={refreshLocation} variant="outline" class="w-full">
           <Navigation class="h-4 w-4 mr-2" />
           Try Again
         </Button>
@@ -322,35 +348,45 @@
     <CardContent class="space-y-4">
       <!-- Check-in Button -->
       <button
-        on:click={() => submitAttendance('checkIn')}
+        type="button"
+        onclick={() => submitAttendance('checkIn')}
         disabled={isSubmitting || !currentLocation || !isWithinOfficeRadius() || !isWithinTimeWindow('checkIn')}
-        class="w-full h-12 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full h-14 flex items-center justify-center gap-2 rounded-lg font-medium text-white transition-colors
+          bg-green-400 hover:bg-green-500
+          disabled:bg-green-200 disabled:text-white/70 disabled:cursor-not-allowed
+          shadow-sm mb-3"
+        style="font-size:1.15rem;"
       >
         {#if isSubmitting}
-          <div class="flex items-center space-x-2">
-            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          <div class="flex items-center gap-2">
+            <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-b-transparent"></div>
             <span>Submitting...</span>
           </div>
         {:else}
-          <CheckCircle class="h-4 w-4 mr-2" />
-          Check In
+          <CheckCircle class="h-5 w-5 mr-1" />
+          <span>Check In</span>
         {/if}
-              </button>
+      </button>
 
       <!-- Check-out Button -->
       <button
-        on:click={() => submitAttendance('checkOut')}
+        type="button"
+        onclick={() => submitAttendance('checkOut')}
         disabled={isSubmitting || !currentLocation || !isWithinOfficeRadius() || !isWithinTimeWindow('checkOut')}
-        class="w-full h-12 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full h-14 flex items-center justify-center gap-2 rounded-lg font-medium text-white transition-colors
+          bg-red-400 hover:bg-red-500
+          disabled:bg-red-200 disabled:text-white/70 disabled:cursor-not-allowed
+          shadow-sm"
+        style="font-size:1.15rem;"
       >
         {#if isSubmitting}
-          <div class="flex items-center space-x-2">
-            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          <div class="flex items-center gap-2">
+            <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-b-transparent"></div>
             <span>Submitting...</span>
           </div>
         {:else}
-          <XCircle class="h-4 w-4 mr-2" />
-          Check Out
+          <XCircle class="h-5 w-5 mr-1" />
+          <span>Check Out</span>
         {/if}
       </button>
 
@@ -395,3 +431,4 @@
     </CardContent>
   </Card>
 </div>
+</EmployeeLayout>

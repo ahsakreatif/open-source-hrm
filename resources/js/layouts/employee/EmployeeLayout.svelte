@@ -14,6 +14,13 @@
 
   <!-- Main Content Area -->
   <main class="pb-20 md:pb-0">
+    <!-- Breadcrumb Navigation (Desktop only) -->
+    <div class="hidden md:block border-b bg-white">
+      <div class="container mx-auto px-4 py-3">
+        <slot name="breadcrumb" />
+      </div>
+    </div>
+
     <slot />
   </main>
 
