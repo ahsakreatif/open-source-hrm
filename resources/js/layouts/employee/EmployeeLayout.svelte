@@ -3,9 +3,10 @@
   import { isMobile } from '../../hooks/is-mobile.svelte';
   import EmployeeTopNavbar from './EmployeeTopNavbar.svelte';
   import EmployeeBottomNav from './EmployeeBottomNav.svelte';
+  import { page } from '@inertiajs/svelte';
 
-  export let user: any;
-  export let currentPage: string = '';
+  let user = $derived($page.props.auth.user);
+  let currentPage: string = $props();
 </script>
 
 <div class="min-h-screen bg-gray-50">
