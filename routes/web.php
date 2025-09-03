@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AttendanceController;
 
 // Public routes (no authentication required)
 Route::get('/', function () {
@@ -45,6 +46,15 @@ Route::middleware(['auth:employee', 'employee.auth'])->group(function () {
         Route::get('/payslip', function () {
             return Inertia::render('employee/Payslip');
         })->name('employee.payslip');
+    });
+
+    // Attendance API routes
+    Route::prefix('api/attendance')->group(function () {
+        Route::get('/today', [AttendanceController::class, 'getTodayAttendance'])->name('api.attendance.today');
+        Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('api.attendance.check-in');
+        Route::post('/check-out', [AttendanceController::class, 'checkOut'])->name('api.attendance.check-out');
+        Route::get('/history', [AttendanceController::class, 'getAttendanceHistory'])->name('api.attendance.history');
+        Route::post('/validate-location', [AttendanceController::class, 'validateLocation'])->name('api.attendance.validate-location');
     });
 });
 

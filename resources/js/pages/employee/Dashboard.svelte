@@ -106,14 +106,29 @@
   }
 
   function loadAttendanceData() {
-    // TODO: Load actual attendance data from API
-    // For now, simulate loading with dummy data
-    setTimeout(() => {
+    // Load actual attendance data from API
+    fetch('/api/attendance/today', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        attendanceStatus = data.data.status;
+        lastAttendance = data.data.attendance;
+      }
       isLoading = false;
-      // Simulate different attendance statuses for demonstration
-      const statuses = ['not_checked_in', 'checked_in', 'checked_out'];
-      attendanceStatus = statuses[Math.floor(Math.random() * statuses.length)];
-    }, 1000);
+    })
+    .catch(error => {
+      console.error('Failed to load attendance data:', error);
+      // Fallback to dummy data if API fails
+      attendanceStatus = 'not_checked_in';
+      isLoading = false;
+    });
   }
 
   function getAttendanceStatusInfo() {

@@ -2,6 +2,7 @@
   import { router } from '@inertiajs/svelte';
   import { createEventDispatcher } from 'svelte';
   import { Button } from '../../components/ui/button';
+  import { Link } from '@inertiajs/svelte';
   import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
   import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../../components/ui/dropdown-menu';
   import { LogOut, User, Settings, Bell, Home, Clock, FileText, Megaphone, Receipt } from 'lucide-svelte';
@@ -39,10 +40,12 @@
       <!-- <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
         <span class="text-sm font-bold text-primary-foreground">HR</span>
       </div> -->
-      <AppLogo class="size-15 fill-current text-white" />
-      <div class="hidden md:block">
-        <h1 class="text-lg font-semibold text-gray-900">{pageTitle}</h1>
-      </div>
+      <Link href={route('dashboard')}>
+        <AppLogo class="size-15 fill-current text-white" />
+        <div class="hidden md:block">
+            <h1 class="text-lg font-semibold text-gray-900">{pageTitle}</h1>
+        </div>
+      </Link>
     </div>
 
     <!-- Navigation Menu (Desktop only) -->
