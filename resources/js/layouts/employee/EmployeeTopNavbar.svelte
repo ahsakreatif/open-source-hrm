@@ -5,6 +5,7 @@
   import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
   import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../../components/ui/dropdown-menu';
   import { LogOut, User, Settings, Bell } from 'lucide-svelte';
+  import AppLogo from '../../components/AppLogo.svelte';
 
   export let user: any;
   export let currentPage: string = '';
@@ -35,9 +36,10 @@
   <div class="container flex h-16 items-center justify-between px-4 md:px-6">
     <!-- Logo and Title -->
     <div class="flex items-center gap-3">
-      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+      <!-- <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
         <span class="text-sm font-bold text-primary-foreground">HR</span>
-      </div>
+      </div> -->
+      <AppLogo class="size-15 fill-current text-white" />
       <div class="hidden md:block">
         <h1 class="text-lg font-semibold text-gray-900">{pageTitle}</h1>
       </div>

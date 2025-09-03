@@ -6,8 +6,11 @@ use Illuminate\Support\Facades\Auth;
 
 // Public routes (no authentication required)
 Route::get('/', function () {
+    if (Auth::guard('employee')->check()) {
+        return redirect()->route('dashboard');
+    }
     // Redirect to employee login for the main app
-    return redirect()->route('employee.login');
+    return redirect()->route('login');
 })->name('home');
 
 // Employee authentication routes (handled in auth.php)

@@ -67,8 +67,6 @@ class Employee extends Authenticatable
         return "{$this->first_name} {$this->last_name}";
     }
 
-
-
     public static function booted()
     {
         static::creating(function ($employee) {

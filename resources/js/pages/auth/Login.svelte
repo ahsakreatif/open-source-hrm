@@ -53,7 +53,7 @@
 </script>
 
 <svelte:head>
-    <title>Login</title>
+    <title>{t('frontend.auth.login.title')}</title>
 </svelte:head>
 
 <div class="flex h-screen">

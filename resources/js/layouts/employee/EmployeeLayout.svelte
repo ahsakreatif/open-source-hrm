@@ -1,13 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { IsMobile } from '../../hooks/is-mobile.svelte';
+  import { isMobile } from '../../hooks/is-mobile.svelte';
   import EmployeeTopNavbar from './EmployeeTopNavbar.svelte';
   import EmployeeBottomNav from './EmployeeBottomNav.svelte';
 
   export let user: any;
   export let currentPage: string = '';
-
-  const isMobile = new IsMobile();
 </script>
 
 <div class="min-h-screen bg-gray-50">

@@ -5,12 +5,12 @@
   export let currentPage: string;
 
   const navigationItems = [
-    { name: 'Dashboard', href: '/employee/dashboard', icon: Home },
-    { name: 'Profile', href: '/employee/profile', icon: User },
-    { name: 'Attendance', href: '/employee/attendance', icon: Clock },
-    { name: 'Leave', href: '/employee/leave-requests', icon: FileText },
-    { name: 'News', href: '/employee/announcements', icon: Bell },
-    { name: 'Payslip', href: '/employee/payslip', icon: CreditCard },
+    { name: 'Dashboard', href: '/dashboard', icon: Home },
+    { name: 'Profile', href: '#', icon: User },
+    { name: 'Attendance', href: '#', icon: Clock },
+    { name: 'Leave', href: '#', icon: FileText },
+    { name: 'News', href: '#', icon: Bell },
+    { name: 'Payslip', href: '#', icon: CreditCard },
   ];
 
   function handleNavigation(href: string) {

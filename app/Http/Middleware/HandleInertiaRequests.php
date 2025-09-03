@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Middleware;
 use App\Helpers\TranslationHelper;
 use Tighten\Ziggy\Ziggy;
-
+use Illuminate\Support\Facades\Auth;
 class HandleInertiaRequests extends Middleware
 {
     protected $rootView = 'app';
@@ -20,6 +20,14 @@ class HandleInertiaRequests extends Middleware
     {
         // Get fresh user data (not cached)
         $user = $request->user();
+
+        // get auth user
+        $authUser = Auth::guard('employee')->user();
+
+        if ($authUser) {
+            $user = $authUser;
+            $user->load(['position', 'department', 'location']);
+        }
 
         // Debug: Check the current locale
         \Illuminate\Support\Facades\Log::info('HandleInertiaRequests - Current Locale: ' . app()->getLocale());
