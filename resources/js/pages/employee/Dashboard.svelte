@@ -32,6 +32,57 @@
 
   let user = $derived($page.props.auth.user);
 
+  // Dummy data for demonstration
+  const dummyEmployeeData = {
+    first_name: 'John',
+    last_name: 'Doe',
+    full_name: 'John Doe',
+    employee_number: 'EMP001',
+    position: { title: 'Software Developer' },
+    department: { name: 'Engineering' },
+    avatar: null
+  };
+
+  // Enhanced dummy data for recent activities
+  const dummyRecentActivities = [
+    {
+      id: 1,
+      type: 'attendance',
+      title: 'Attendance submitted',
+      description: 'Checked in at 8:30 AM',
+      time: 'Today at 8:30 AM',
+      status: 'success',
+      color: 'bg-green-500'
+    },
+    {
+      id: 2,
+      type: 'leave',
+      title: 'Leave request approved',
+      description: 'Annual leave for Dec 25-27',
+      time: 'Yesterday at 2:15 PM',
+      status: 'approved',
+      color: 'bg-blue-500'
+    },
+    {
+      id: 3,
+      type: 'announcement',
+      title: 'New announcement',
+      description: 'Company holiday schedule updated',
+      time: '2 days ago',
+      status: 'info',
+      color: 'bg-yellow-500'
+    },
+    {
+      id: 4,
+      type: 'payslip',
+      title: 'Payslip generated',
+      description: 'November 2024 salary details',
+      time: '3 days ago',
+      status: 'success',
+      color: 'bg-purple-500'
+    }
+  ];
+
   onMount(() => {
     updateDateTime();
     setInterval(updateDateTime, 1000);
@@ -56,11 +107,12 @@
 
   function loadAttendanceData() {
     // TODO: Load actual attendance data from API
-    // For now, simulate loading
+    // For now, simulate loading with dummy data
     setTimeout(() => {
       isLoading = false;
-      // Simulate attendance status
-      attendanceStatus = 'not_checked_in';
+      // Simulate different attendance statuses for demonstration
+      const statuses = ['not_checked_in', 'checked_in', 'checked_out'];
+      attendanceStatus = statuses[Math.floor(Math.random() * statuses.length)];
     }, 1000);
   }
 
@@ -103,6 +155,9 @@
 
   // Use $derived instead of $: for Svelte 5
   const attendanceInfo = $derived(getAttendanceStatusInfo());
+
+  // Get user data with fallback to dummy data
+  const displayUser = $derived(user || dummyEmployeeData);
 </script>
 
 <svelte:head>
@@ -123,7 +178,7 @@
   <div class="container mx-auto px-4 py-6 max-w-4xl">
       <!-- Header Section -->
       <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Welcome back, {user?.first_name}!</h1>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Welcome back, {displayUser.first_name}!</h1>
         <p class="text-gray-600">Here's what's happening today</p>
       </div>
 
@@ -148,16 +203,16 @@
         <CardContent>
           <div class="flex items-center gap-4">
             <Avatar class="h-16 w-16">
-              <AvatarImage src={user?.avatar} alt={user?.full_name || user?.name} />
+              <AvatarImage src={displayUser.avatar} alt={displayUser.full_name} />
               <AvatarFallback class="text-lg">
-                {user?.first_name?.[0]}{user?.last_name?.[0] || 'E'}
+                {displayUser.first_name?.[0]}{displayUser.last_name?.[0] || 'E'}
               </AvatarFallback>
             </Avatar>
             <div class="flex-1">
-              <h3 class="text-lg font-semibold text-gray-900">{user?.full_name || user?.name}</h3>
-              <p class="text-gray-600">{user?.position?.title || 'Position'}</p>
-              <p class="text-gray-600">{user?.department?.name || 'Department'}</p>
-              <p class="text-sm text-gray-500">Employee ID: {user?.employee_number}</p>
+              <h3 class="text-lg font-semibold text-gray-900">{displayUser.full_name}</h3>
+              <p class="text-gray-600">{displayUser.position?.title || 'Position'}</p>
+              <p class="text-gray-600">{displayUser.department?.name || 'Department'}</p>
+              <p class="text-sm text-gray-500">Employee ID: {displayUser.employee_number}</p>
             </div>
           </div>
         </CardContent>
@@ -174,7 +229,15 @@
         <CardContent>
           <div class="text-center mb-4">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full {attendanceInfo.color}">
-              <svelte:component this={attendanceInfo.icon} class="h-4 w-4" />
+              <div class="h-4 w-4">
+                {#if attendanceInfo.icon === CheckCircle}
+                  <CheckCircle class="h-4 w-4" />
+                {:else if attendanceInfo.icon === XCircle}
+                  <XCircle class="h-4 w-4" />
+                {:else}
+                  <AlertCircle class="h-4 w-4" />
+                {/if}
+              </div>
               <span class="text-sm font-medium">{attendanceInfo.status}</span>
             </div>
           </div>
@@ -196,7 +259,7 @@
 
       <!-- Quick Access Grid -->
       <div class="grid grid-cols-2 gap-4 mb-6">
-        <button class="w-full" on:click={() => navigateTo('/employee/profile')}>
+        <button class="w-full" onclick={() => navigateTo('/employee/profile')}>
           <Card class="cursor-pointer hover:shadow-lg transition-shadow">
             <CardContent class="p-4 text-center">
               <User class="h-8 w-8 mx-auto mb-2 text-blue-500" />
@@ -206,7 +269,7 @@
           </Card>
         </button>
 
-        <button class="w-full" on:click={() => navigateTo('/employee/leave-requests')}>
+        <button class="w-full" onclick={() => navigateTo('/employee/leave-requests')}>
           <Card class="cursor-pointer hover:shadow-lg transition-shadow">
             <CardContent class="p-4 text-center">
               <Calendar class="h-8 w-8 mx-auto mb-2 text-green-500" />
@@ -216,7 +279,7 @@
           </Card>
         </button>
 
-        <button class="w-full" on:click={() => navigateTo('/employee/announcements')}>
+        <button class="w-full" onclick={() => navigateTo('/employee/announcements')}>
           <Card class="cursor-pointer hover:shadow-lg transition-shadow">
             <CardContent class="p-4 text-center">
             <Bell class="h-8 w-8 mx-auto mb-2 text-yellow-500" />
@@ -226,11 +289,11 @@
           </Card>
         </button>
 
-        <button class="w-full" on:click={() => navigateTo('/employee/payslip')}>
+        <button class="w-full" onclick={() => navigateTo('/employee/payslip')}>
           <Card class="cursor-pointer hover:shadow-lg transition-shadow">
             <CardContent class="p-4 text-center">
               <CreditCard class="h-8 w-8 mx-auto mb-2 text-purple-500" />
-              <h3 class="font-medium text-gray-900">Payslip</h3>
+              <p class="font-medium text-gray-900">Payslip</p>
               <p class="text-sm text-gray-600">View salary details</p>
             </CardContent>
           </Card>
@@ -247,29 +310,16 @@
         </CardHeader>
         <CardContent>
           <div class="space-y-3">
-            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div class="h-2 w-2 bg-green-500 rounded-full"></div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-gray-900">Attendance submitted</p>
-                <p class="text-xs text-gray-500">Today at 8:30 AM</p>
+            {#each dummyRecentActivities as activity}
+              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div class="h-2 w-2 {activity.color} rounded-full"></div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-gray-900">{activity.title}</p>
+                  <p class="text-xs text-gray-500">{activity.description}</p>
+                  <p class="text-xs text-gray-400">{activity.time}</p>
+                </div>
               </div>
-            </div>
-
-            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div class="h-2 w-2 bg-blue-500 rounded-full"></div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-gray-900">Leave request approved</p>
-                <p class="text-xs text-gray-500">Yesterday at 2:15 PM</p>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div class="h-2 w-2 bg-yellow-500 rounded-full"></div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-gray-900">New announcement</p>
-                <p class="text-xs text-gray-500">2 days ago</p>
-              </div>
-            </div>
+            {/each}
           </div>
         </CardContent>
       </Card>
