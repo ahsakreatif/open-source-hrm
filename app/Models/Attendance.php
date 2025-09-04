@@ -172,11 +172,13 @@ class Attendance extends Model
         $currentTime = $now->format('H:i');
 
         if ($action === 'checkIn') {
-            // Check-in window: 7:00 AM - 9:00 AM
-            return $currentTime >= '07:00' && $currentTime <= '09:00';
+            $start = config('attendance.check_in_start', '07:00');
+            $end = config('attendance.check_in_end', '10:00');
+            return $currentTime >= $start && $currentTime <= $end;
         } elseif ($action === 'checkOut') {
-            // Check-out window: 5:00 PM - 7:00 PM
-            return $currentTime >= '17:00' && $currentTime <= '19:00';
+            $start = config('attendance.check_out_start', '17:00');
+            $end = config('attendance.check_out_end', '19:00');
+            return $currentTime >= $start && $currentTime <= $end;
         }
 
         return false;
@@ -186,14 +188,14 @@ class Attendance extends Model
     {
         if ($action === 'checkIn') {
             return [
-                'start' => '07:00',
-                'end' => '09:00',
+                'start' => config('attendance.check_in_start', '07:00'),
+                'end' => config('attendance.check_in_end', '10:00'),
                 'label' => 'Check-in Window'
             ];
         } elseif ($action === 'checkOut') {
             return [
-                'start' => '17:00',
-                'end' => '19:00',
+                'start' => config('attendance.check_out_start', '17:00'),
+                'end' => config('attendance.check_out_end', '19:00'),
                 'label' => 'Check-out Window'
             ];
         }

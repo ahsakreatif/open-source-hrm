@@ -202,6 +202,14 @@
                 label: data.data.time_windows.check_out?.label || 'Check-out Window'
               }
             };
+
+            // Also update timeRestrictions to keep them in sync
+            timeRestrictions = {
+              checkInStart: timeWindows.checkIn.start,
+              checkInEnd: timeWindows.checkIn.end,
+              checkOutStart: timeWindows.checkOut.start,
+              checkOutEnd: timeWindows.checkOut.end
+            };
           }
         }
       }
@@ -213,6 +221,14 @@
       timeWindows = {
         checkIn: { start: '07:00', end: '09:00', label: 'Check-in Window' },
         checkOut: { start: '17:00', end: '19:00', label: 'Check-out Window' }
+      };
+
+      // Also update timeRestrictions with fallback values
+      timeRestrictions = {
+        checkInStart: '07:00',
+        checkInEnd: '09:00',
+        checkOutStart: '17:00',
+        checkOutEnd: '19:00'
       };
     } finally {
       isLoadingAttendance = false;
@@ -280,22 +296,44 @@
     return R * c;
   }
 
-  function isWithinOfficeRadius(): boolean {
-    if (!currentLocation || !locationValidationResult) return false;
+    function isWithinOfficeRadius(): boolean {
+    if (!currentLocation) return false;
 
-    // Use the backend validation result instead of frontend calculation
-    return locationValidationResult.is_within_radius;
+    // If we have backend validation result, use it
+    if (locationValidationResult) {
+      return locationValidationResult.is_within_radius;
+    }
+
+    // Fallback to frontend calculation if backend validation hasn't completed yet
+    const distance = calculateDistance(
+      currentLocation.coords.latitude,
+      currentLocation.coords.longitude,
+      officeLocation.lat,
+      officeLocation.lng
+    );
+
+    return distance <= maxRadius;
   }
 
-  function isWithinTimeWindow(action: 'checkIn' | 'checkOut'): boolean {
+      function isWithinTimeWindow(action: 'checkIn' | 'checkOut'): boolean {
     const currentTimeStr = currentTime;
 
+    // Convert time strings to minutes for proper numeric comparison
+    function timeToMinutes(timeStr: string): number {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    }
+
+    const currentMinutes = timeToMinutes(currentTimeStr);
+    const checkInStartMinutes = timeToMinutes(timeRestrictions.checkInStart);
+    const checkInEndMinutes = timeToMinutes(timeRestrictions.checkInEnd);
+    const checkOutStartMinutes = timeToMinutes(timeRestrictions.checkOutStart);
+    const checkOutEndMinutes = timeToMinutes(timeRestrictions.checkOutEnd);
+
     if (action === 'checkIn') {
-      return currentTimeStr >= timeRestrictions.checkInStart &&
-             currentTimeStr <= timeRestrictions.checkInEnd;
+      return currentMinutes >= checkInStartMinutes && currentMinutes <= checkInEndMinutes;
     } else {
-      return currentTimeStr >= timeRestrictions.checkOutStart &&
-             currentTimeStr <= timeRestrictions.checkOutEnd;
+      return currentMinutes >= checkOutStartMinutes && currentMinutes <= checkOutEndMinutes;
     }
   }
 
@@ -350,7 +388,7 @@
         body: JSON.stringify({
           latitude: currentLocation?.coords.latitude,
           longitude: currentLocation?.coords.longitude,
-          accuracy: currentLocation?.coords.accuracy
+          accuracy: currentLocation?.coords.accuracy ? Math.round(currentLocation.coords.accuracy) : undefined
         })
       });
 
@@ -369,7 +407,7 @@
 
           // Redirect to dashboard after a short delay
           setTimeout(() => {
-            router.visit('/employee/dashboard');
+            router.visit('/dashboard');
           }, 2000);
         } else {
           showMessage(data.message || 'Failed to submit attendance', 'error');
@@ -571,7 +609,7 @@
       <!-- Check-in Button -->
       <Button
         onclick={() => submitAttendance('checkIn')}
-        disabled={isSubmitting || !currentLocation || !locationValidationResult?.is_within_radius || !isWithinTimeWindow('checkIn') || !canCheckIn}
+        disabled={isSubmitting || !currentLocation || !isWithinOfficeRadius() || !isWithinTimeWindow('checkIn') || !canCheckIn}
         class="w-full"
       >
         <Clock class="h-4 w-4 mr-2" />
@@ -581,7 +619,7 @@
       <!-- Check-out Button -->
       <Button
         onclick={() => submitAttendance('checkOut')}
-        disabled={isSubmitting || !currentLocation || !locationValidationResult?.is_within_radius || !isWithinTimeWindow('checkOut') || !canCheckOut}
+        disabled={isSubmitting || !currentLocation || !isWithinOfficeRadius() || !isWithinTimeWindow('checkOut') || !canCheckOut}
         variant="outline"
         class="w-full"
       >
@@ -598,9 +636,11 @@
       {:else if !isWithinOfficeRadius()}
         <Alert variant="destructive">
           <AlertTriangle class="h-4 w-4" />
-          <AlertDescription>You must be within 100m of the office to submit attendance.</AlertDescription>
+          <AlertDescription>You must be within {maxRadius}m of the office to submit attendance.</AlertDescription>
         </Alert>
       {/if}
+
+
     </CardContent>
   </Card>
 

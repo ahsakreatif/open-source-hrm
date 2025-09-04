@@ -301,19 +301,25 @@ class AttendanceController extends Controller
         $now = now();
         $currentTime = $now->format('H:i');
 
+        // Get time windows from config
+        $checkInStart = config('attendance.check_in_start', '07:00');
+        $checkInEnd = config('attendance.check_in_end', '10:00');
+        $checkOutStart = config('attendance.check_out_start', '17:00');
+        $checkOutEnd = config('attendance.check_out_end', '19:00');
+
         // Check time window
         if ($action === 'checkIn') {
-            if ($currentTime < '07:00' || $currentTime > '09:00') {
+            if ($currentTime < $checkInStart || $currentTime > $checkInEnd) {
                 return [
                     'can' => false,
-                    'reason' => 'Check-in is only available between 7:00 AM and 9:00 AM'
+                    'reason' => "Check-in is only available between " . date('g:i A', strtotime($checkInStart)) . " and " . date('g:i A', strtotime($checkInEnd))
                 ];
             }
         } elseif ($action === 'checkOut') {
-            if ($currentTime < '17:00' || $currentTime > '19:00') {
+            if ($currentTime < $checkOutStart || $currentTime > $checkOutEnd) {
                 return [
                     'can' => false,
-                    'reason' => 'Check-out is only available between 5:00 PM and 7:00 PM'
+                    'reason' => "Check-out is only available between " . date('g:i A', strtotime($checkOutStart)) . " and " . date('g:i A', strtotime($checkOutEnd))
                 ];
             }
         }
