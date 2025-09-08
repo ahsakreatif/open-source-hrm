@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('employee_number')->unique();
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('national_id')->unique();
+            $table->string('national_id')->unique()->nullable();
             $table->string('kra_pin')->unique()->nullable();
             $table->string('email')->unique()->nullable();
             $table->string('phone')->nullable();
@@ -34,8 +34,8 @@ return new class extends Migration {
                 ->nullable()
                 ->constrained('positions')
                 ->onDelete('set null');
-            $table->enum('employment_type', ['Permanent', 'Contract', 'Casual']);
-            $table->date('hire_date');
+            $table->enum('employment_type', ['Permanent', 'Contract', 'Casual'])->nullable();
+            $table->date('hire_date')->nullable();
             $table->date('termination_date')->nullable();
             $table->boolean('is_active')->default(true);
 

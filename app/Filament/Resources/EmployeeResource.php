@@ -70,13 +70,10 @@ class EmployeeResource extends Resource
                     ->collapsible()
                     ->schema([
                         TextInput::make('email')->email()->required()->label('Email Address (this will be the password for the employee)')
-                            ->unique(ignoreRecord: true)
-
-                        ,
-                        TextInput::make('phone')->tel()->required()->label('Phone Number')->unique(ignoreRecord: true),
-                        TextInput::make('national_id')->required()->unique(ignoreRecord: true)
-                            ->integer()
-                        ,
+                            ->unique(ignoreRecord: true),
+                        TextInput::make('phone')->tel()->label('Phone Number')->unique(ignoreRecord: true),
+                        TextInput::make('national_id')->unique(ignoreRecord: true)
+                            ->integer(),
                         TextInput::make('kra_pin'),
                     ])
                     ->columns(2),
@@ -91,13 +88,10 @@ class EmployeeResource extends Resource
                     ->collapsible()
                     ->schema([
                         TextInput::make('next_of_kin_name')
-                            ->label('Name')
-                            ->required(),
+                            ->label('Name'),
                         TextInput::make('next_of_kin_relationship')
-                            ->label('Relationship')
-                            ->required(),
+                            ->label('Relationship'),
                         TextInput::make('next_of_kin_phone')
-                            ->required()
                             ->tel()
                             ->label('Phone'),
                         TextInput::make('next_of_kin_email')
@@ -153,7 +147,6 @@ class EmployeeResource extends Resource
                                     ->label('Description')
                                     ->nullable()
                                     ->maxLength(255),
-
                             ])
                             ->createOptionUsing(function (array $data) {
                                 return Position::create([
@@ -181,9 +174,8 @@ class EmployeeResource extends Resource
                                 'Permanent' => 'Permanent',
                                 'Contract' => 'Contract',
                                 'Casual' => 'Casual',
-                            ])
-                            ->required(),
-                        DatePicker::make('hire_date')->required(),
+                            ]),
+                        DatePicker::make('hire_date'),
                         DatePicker::make('termination_date'),
                         Toggle::make('is_active')->default(true),
                     ])
