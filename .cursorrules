@@ -1,0 +1,279 @@
+# Cursor Rules for Employee HR Mobile Application
+
+## 🎯 Project Overview
+This is a mobile-first, progressive web app (PWA) built with Svelte + Inertia.js + Laravel. The application follows modern mobile app design patterns and emphasizes code quality, performance, and maintainability.
+
+## 🏗️ Architecture & Technology Stack
+
+### Frontend (Svelte + Inertia.js)
+- **Framework**: Svelte 5+ with TypeScript
+- **Routing**: Inertia.js for seamless SPA-like navigation
+- **State Management**: Use Svelte stores and reactive statements
+- **UI Components**: Use the existing UI component library in `resources/js/components/ui/`
+- **Styling**: Tailwind CSS with mobile-first responsive design
+
+### Backend (Laravel)
+- **PHP Version**: 8.1+
+- **Authentication**: Employee-specific guard with session management
+- **API Design**: RESTful endpoints with proper validation
+- **Database**: Eloquent ORM with proper relationships
+- **Security**: CSRF protection, rate limiting, input validation
+
+## 📱 Mobile-First Development Rules
+
+### Responsive Design
+- **Breakpoints**: Mobile (<768px), Tablet (768px-1024px), Desktop (>1024px)
+- **Layout**: Mobile gets bottom navigation, desktop gets top navigation only
+- **Touch Targets**: Minimum 44px × 44px for interactive elements
+- **Viewport**: Always use responsive viewport meta tags
+
+### Component Structure
+```svelte
+<!-- Always structure components with mobile-first approach -->
+<script lang="ts">
+  // TypeScript interfaces first
+  // Reactive statements
+  // Event handlers
+  // Lifecycle methods
+</script>
+
+<!-- Mobile-first markup -->
+<div class="w-full md:w-auto">
+  <!-- Mobile layout -->
+  <div class="block md:hidden">
+    <!-- Mobile-specific content -->
+  </div>
+
+  <!-- Desktop layout -->
+  <div class="hidden md:block">
+    <!-- Desktop-specific content -->
+  </div>
+</div>
+```
+
+## 🔐 Authentication & Security Rules
+
+### Frontend Security
+- **Route Protection**: Always check authentication state before rendering protected content
+- **Input Validation**: Client-side validation for immediate feedback
+- **Error Handling**: Graceful error messages without exposing sensitive information
+- **Session Management**: Proper logout and session cleanup
+
+### Backend Security
+- **Guard Usage**: Use `auth:employee` middleware for employee routes
+- **Input Sanitization**: Always sanitize and validate user inputs
+- **SQL Injection**: Use Eloquent ORM, never raw SQL queries
+- **Rate Limiting**: Implement rate limiting for authentication endpoints
+
+## 📍 Location Services Rules
+
+### GPS Integration
+- **Permission Handling**: Always request location permission gracefully
+- **Fallback Strategy**: Provide alternative input methods when GPS unavailable
+- **Accuracy**: Use high accuracy mode for location capture
+- **Radius Validation**: Implement 100m office boundary checking
+
+### Location Code Example
+```typescript
+// Always handle location errors gracefully
+function getCurrentLocation(): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      resolve,
+      (error) => {
+        // Provide user-friendly error messages
+        const errorMessages = {
+          [error.PERMISSION_DENIED]: 'Location access denied. Please enable location services.',
+          [error.POSITION_UNAVAILABLE]: 'Location information unavailable.',
+          [error.TIMEOUT]: 'Location request timed out.'
+        };
+        reject(new Error(errorMessages[error.code] || 'Unknown location error'));
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  });
+}
+```
+
+## 🎨 UI/UX Development Rules
+
+### Component Design
+- **Consistency**: Use existing UI component library consistently
+- **Accessibility**: Include proper ARIA labels and semantic HTML
+- **Loading States**: Always show loading indicators for async operations
+- **Error States**: Provide clear error messages and recovery options
+
+### Mobile Patterns
+- **Bottom Navigation**: Use for primary navigation on mobile
+- **Top Navigation**: Use for page titles and user actions
+- **Cards**: Use card-based layouts for content organization
+- **Touch Feedback**: Provide visual feedback for touch interactions
+
+## 📊 State Management Rules
+
+### Svelte Stores
+- **Reactive Statements**: Use `$:` for derived state
+- **Store Updates**: Use proper store update methods
+- **Component State**: Keep component state local when possible
+- **Global State**: Use stores for application-wide state
+
+### Data Flow
+```typescript
+// Always define proper interfaces
+interface Employee {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  department_id: number;
+  position_id: number;
+  // ... other properties
+}
+
+// Use reactive statements for derived state
+$: fullName = `${employee.first_name} ${employee.last_name}`;
+$: canSubmitAttendance = currentLocation && isWithinOfficeRadius();
+```
+
+## 🔧 Performance Rules
+
+### Frontend Performance
+- **Lazy Loading**: Implement lazy loading for non-critical components
+- **Image Optimization**: Use appropriate image formats and sizes
+- **Bundle Size**: Keep component imports minimal
+- **Caching**: Implement proper caching strategies
+
+### Backend Performance
+- **Database Queries**: Use eager loading to avoid N+1 queries
+- **Caching**: Implement Redis caching for frequently accessed data
+- **API Response**: Keep API responses lean and focused
+- **Rate Limiting**: Implement appropriate rate limiting
+
+## 🧪 Testing Rules
+
+### Code Quality
+- **TypeScript**: Always use strict TypeScript mode
+- **Error Handling**: Handle all possible error cases
+- **Edge Cases**: Consider edge cases in user interactions
+- **Validation**: Validate all user inputs
+
+### Testing Strategy
+- **Unit Tests**: Write tests for utility functions and components
+- **Integration Tests**: Test API endpoints and component interactions
+- **User Testing**: Test on actual mobile devices
+- **Cross-Browser**: Test on multiple browsers and devices
+
+## 📁 File Organization Rules
+
+### Frontend Structure
+```
+resources/js/
+├── components/
+│   ├── ui/           # Reusable UI components
+│   └── employee/     # Employee-specific components
+├── layouts/
+│   └── employee/     # Employee layout components
+├── pages/
+│   ├── auth/         # Authentication pages
+│   └── employee/     # Employee feature pages
+├── hooks/            # Custom Svelte hooks
+├── stores/           # Svelte stores
+└── types/            # TypeScript type definitions
+```
+
+### Backend Structure
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   └── Auth/     # Authentication controllers
+│   ├── Middleware/    # Custom middleware
+│   └── Requests/      # Form request validation
+├── Models/            # Eloquent models
+├── Services/          # Business logic services
+└── Providers/         # Service providers
+```
+
+## 🚀 Development Workflow Rules
+
+### Code Standards
+- **Formatting**: Use Prettier for consistent code formatting
+- **Linting**: Use ESLint with TypeScript rules
+- **Commits**: Use conventional commit messages
+- **Branches**: Use feature branches for new development
+
+### Git Commit Convention
+```
+feat: add employee attendance submission
+fix: resolve GPS location accuracy issue
+docs: update API documentation
+style: improve mobile navigation layout
+refactor: simplify authentication logic
+test: add attendance validation tests
+```
+
+## 🔍 Code Review Checklist
+
+### Frontend Review
+- [ ] Mobile-first responsive design
+- [ ] Proper TypeScript types
+- [ ] Accessibility considerations
+- [ ] Performance optimization
+- [ ] Error handling
+- [ ] Loading states
+
+### Backend Review
+- [ ] Security validation
+- [ ] Database optimization
+- [ ] API response format
+- [ ] Error handling
+- [ ] Rate limiting
+- [ ] Input sanitization
+
+## 📱 PWA Requirements
+
+### Progressive Web App Features
+- **Service Worker**: Implement for offline functionality
+- **Manifest**: Include proper PWA manifest
+- **Install Prompt**: Enable "Add to Home Screen" functionality
+- **Offline Support**: Provide basic offline functionality
+
+## 🎯 Priority Rules
+
+### Must-Have (Phase 1)
+- Employee authentication
+- Basic layout and navigation
+- Dashboard functionality
+- Attendance submission with GPS
+
+### Should-Have (Phase 2)
+- Profile management
+- Leave requests
+- Announcements
+- Payslip viewing
+
+### Could-Have (Phase 3)
+- Advanced attendance features
+- Push notifications
+- Offline capabilities
+- Performance optimization
+
+---
+
+## 📝 Notes
+- Always prioritize mobile user experience
+- Maintain consistent code quality and patterns
+- Follow security best practices
+- Test on actual mobile devices
+- Keep performance in mind for all implementations
+
+**Remember**: This is a mobile-first application. Every decision should consider the mobile user experience first, then adapt for larger screens.
