@@ -15,12 +15,12 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
-            LocationSeeder::class,
-            DepartmentSeeder::class,
-            PositionSeeder::class,
-            ShiftSeeder::class,
-            EmployeeSeeder::class,
-            AttendanceSeeder::class,
+            // LocationSeeder::class,
+            // DepartmentSeeder::class,
+            // PositionSeeder::class,
+            // ShiftSeeder::class,
+            // EmployeeSeeder::class,
+            // AttendanceSeeder::class,
         ]);
     }
 }
