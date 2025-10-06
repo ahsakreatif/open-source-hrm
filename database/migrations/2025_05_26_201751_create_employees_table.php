@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('employee_number')->unique();
             $table->string('first_name');
-            $table->string('last_name');
+            $table->string('last_name')->nullable();
             $table->string('national_id')->unique()->nullable();
             $table->string('kra_pin')->unique()->nullable();
             $table->string('email')->unique()->nullable();

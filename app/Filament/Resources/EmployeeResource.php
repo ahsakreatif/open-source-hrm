@@ -30,7 +30,7 @@ use Filament\Tables\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Log;
 
 class EmployeeResource extends Resource
 {
@@ -415,51 +415,148 @@ class EmployeeResource extends Resource
             throw new \Exception('Invalid CSV format');
         }
 
-        // Expected headers mapping
+        // Remove BOM from first header if present
+        if (!empty($headers[0])) {
+            $headers[0] = preg_replace('/^\x{FEFF}/u', '', $headers[0]);
+        }
+
+        // Expected headers - use database column names
         $expectedHeaders = [
-            'employee_number' => 'Employee Number',
-            'first_name' => 'First Name',
-            'last_name' => 'Last Name',
-            'email' => 'Email',
-            'phone' => 'Phone',
-            'national_id' => 'National ID',
-            'kra_pin' => 'KRA PIN',
-            'date_of_birth' => 'Date of Birth (YYYY-MM-DD)',
-            'gender' => 'Gender (Male/Female)',
-            'marital_status' => 'Marital Status (Single/Married/Divorced/Widowed)',
-            'employment_type' => 'Employment Type (Permanent/Contract/Casual)',
-            'hire_date' => 'Hire Date (YYYY-MM-DD)',
-            'department_name' => 'Department Name',
-            'position_title' => 'Position Title',
-            'location_name' => 'Location Name',
-            'emergency_contact_name' => 'Emergency Contact Name',
-            'emergency_contact_phone' => 'Emergency Contact Phone',
-            'next_of_kin_name' => 'Next of Kin Name',
-            'next_of_kin_relationship' => 'Next of Kin Relationship',
-            'next_of_kin_phone' => 'Next of Kin Phone',
-            'next_of_kin_email' => 'Next of Kin Email',
-            'is_active' => 'Is Active (true/false)'
+            'employee_number',
+            'first_name',
+            'last_name',
+            'email',
+            'phone',
+            'national_id',
+            'kra_pin',
+            'date_of_birth',
+            'gender',
+            'marital_status',
+            'employment_type',
+            'hire_date',
+            'department_name',
+            'position_title',
+            'location_name',
+            'emergency_contact_name',
+            'emergency_contact_phone',
+            'next_of_kin_name',
+            'next_of_kin_relationship',
+            'next_of_kin_phone',
+            'next_of_kin_email',
+            'is_active'
         ];
 
-        // Validate headers
+        // Required fields
+        $requiredFields = ['employee_number', 'first_name'];
+
+        Log::info($headers);
+
+        // Validate headers and create mapping
         $headerMap = [];
-        foreach ($expectedHeaders as $key => $label) {
+        foreach ($expectedHeaders as $expectedField) {
             $found = false;
             foreach ($headers as $index => $header) {
-                if (strtolower(trim($header)) === strtolower(trim($label))) {
-                    $headerMap[$key] = $index;
+                if (strtolower(trim($header)) === strtolower(trim($expectedField))) {
+                    $headerMap[$expectedField] = $index;
                     $found = true;
                     break;
                 }
             }
-            if (!$found && in_array($key, ['employee_number', 'first_name', 'last_name', 'email'])) {
-                throw new \Exception("Required column '{$label}' not found in CSV");
+            if (!$found && in_array($expectedField, $requiredFields)) {
+                throw new \Exception("Required column '{$expectedField}' not found in CSV");
             }
         }
+
+        // First pass: Collect all unique relationship values and employee data
+        $uniqueDepartments = [];
+        $uniquePositions = [];
+        $uniqueLocations = [];
+        $employeeNumbers = [];
+        $emails = [];
+
+        // Reset file pointer to beginning (after headers)
+        rewind($handle);
+        fgetcsv($handle); // Skip header row
+
+        while (($row = fgetcsv($handle)) !== false) {
+            // Collect unique department names
+            if (isset($headerMap['department_name']) && isset($row[$headerMap['department_name']])) {
+                $deptName = trim($row[$headerMap['department_name']]);
+                if ($deptName) {
+                    $uniqueDepartments[$deptName] = true;
+                }
+            }
+
+            // Collect unique position titles
+            if (isset($headerMap['position_title']) && isset($row[$headerMap['position_title']])) {
+                $posTitle = trim($row[$headerMap['position_title']]);
+                if ($posTitle) {
+                    $uniquePositions[$posTitle] = true;
+                }
+            }
+
+            // Collect unique location names
+            if (isset($headerMap['location_name']) && isset($row[$headerMap['location_name']])) {
+                $locName = trim($row[$headerMap['location_name']]);
+                if ($locName) {
+                    $uniqueLocations[$locName] = true;
+                }
+            }
+
+            // Collect employee numbers and emails for duplicate checking
+            if (isset($headerMap['employee_number']) && isset($row[$headerMap['employee_number']])) {
+                $empNum = trim($row[$headerMap['employee_number']]);
+                if ($empNum) {
+                    $employeeNumbers[$empNum] = true;
+                }
+            }
+
+            if (isset($headerMap['email']) && isset($row[$headerMap['email']])) {
+                $email = trim($row[$headerMap['email']]);
+                if ($email) { // Only collect non-empty emails
+                    $emails[$email] = true;
+                }
+            }
+        }
+
+        // Create missing relationships using firstOrCreate
+        $departmentMap = [];
+        foreach (array_keys($uniqueDepartments) as $deptName) {
+            $department = Department::firstOrCreate(
+                ['name' => $deptName],
+                ['description' => 'Auto-created during import']
+            );
+            $departmentMap[$deptName] = $department->id;
+        }
+
+        $positionMap = [];
+        foreach (array_keys($uniquePositions) as $posTitle) {
+            $position = Position::firstOrCreate(
+                ['title' => $posTitle],
+                ['description' => 'Auto-created during import']
+            );
+            $positionMap[$posTitle] = $position->id;
+        }
+
+        $locationMap = [];
+        foreach (array_keys($uniqueLocations) as $locName) {
+            $location = \App\Models\Location::firstOrCreate(
+                ['name' => $locName],
+                ['address' => 'Auto-created during import']
+            );
+            $locationMap[$locName] = $location->id;
+        }
+
+        // Check for existing employee numbers and emails in bulk
+        $existingEmployeeNumbers = Employee::whereIn('employee_number', array_keys($employeeNumbers))->pluck('employee_number')->toArray();
+        $existingEmails = Employee::whereIn('email', array_keys($emails))->pluck('email')->toArray();
 
         DB::beginTransaction();
 
         try {
+            // Reset file pointer for second pass
+            rewind($handle);
+            fgetcsv($handle); // Skip header row
             $rowNumber = 1; // Start from 1 since we already read the header
 
             while (($row = fgetcsv($handle)) !== false) {
@@ -513,52 +610,67 @@ class EmployeeResource extends Resource
                         }
                     }
 
-                    // Handle relationships
+                    // Handle relationships using pre-mapped IDs
                     if (isset($employeeData['department_name']) && $employeeData['department_name']) {
-                        $department = Department::where('name', $employeeData['department_name'])->first();
-                        if (!$department) {
-                            throw new \Exception("Department '{$employeeData['department_name']}' not found");
+                        $deptName = $employeeData['department_name'];
+                        if (!isset($departmentMap[$deptName])) {
+                            throw new \Exception("Department '{$deptName}' not found in pre-processing");
                         }
-                        $employeeData['department_id'] = $department->id;
+                        $employeeData['department_id'] = $departmentMap[$deptName];
                         unset($employeeData['department_name']);
                     }
 
                     if (isset($employeeData['position_title']) && $employeeData['position_title']) {
-                        $position = Position::where('title', $employeeData['position_title'])->first();
-                        if (!$position) {
-                            throw new \Exception("Position '{$employeeData['position_title']}' not found");
+                        $posTitle = $employeeData['position_title'];
+                        if (!isset($positionMap[$posTitle])) {
+                            throw new \Exception("Position '{$posTitle}' not found in pre-processing");
                         }
-                        $employeeData['position_id'] = $position->id;
+                        $employeeData['position_id'] = $positionMap[$posTitle];
                         unset($employeeData['position_title']);
                     }
 
                     if (isset($employeeData['location_name']) && $employeeData['location_name']) {
-                        $location = \App\Models\Location::where('name', $employeeData['location_name'])->first();
-                        if (!$location) {
-                            throw new \Exception("Location '{$employeeData['location_name']}' not found");
+                        $locName = $employeeData['location_name'];
+                        if (!isset($locationMap[$locName])) {
+                            throw new \Exception("Location '{$locName}' not found in pre-processing");
                         }
-                        $employeeData['location_id'] = $location->id;
+                        $employeeData['location_id'] = $locationMap[$locName];
                         unset($employeeData['location_name']);
                     }
 
                     // Check for required fields
-                    if (empty($employeeData['employee_number']) || empty($employeeData['first_name']) ||
-                        empty($employeeData['last_name']) || empty($employeeData['email'])) {
-                        throw new \Exception("Missing required fields");
+                    if (empty($employeeData['employee_number']) || empty($employeeData['first_name'])) {
+                        throw new \Exception("Missing required fields: employee_number and first_name are required");
                     }
 
-                    // Check for duplicate employee number or email
-                    if (Employee::where('employee_number', $employeeData['employee_number'])->exists()) {
+                    // Check for duplicate employee number or email using pre-collected data
+                    if (in_array($employeeData['employee_number'], $existingEmployeeNumbers)) {
                         throw new \Exception("Employee number '{$employeeData['employee_number']}' already exists");
                     }
 
-                    if (Employee::where('email', $employeeData['email'])->exists()) {
+                    // Only check email duplicates if email is not null/empty
+                    if (!empty($employeeData['email']) && in_array($employeeData['email'], $existingEmails)) {
                         throw new \Exception("Email '{$employeeData['email']}' already exists");
                     }
 
-                    // Set default values
+                    // Clean nullable fields - set empty strings to null to avoid unique constraint violations
+                    $nullableFields = [
+                        'last_name', 'national_id', 'kra_pin', 'email', 'phone',
+                        'emergency_contact_name', 'emergency_contact_phone', 'date_of_birth',
+                        'gender', 'marital_status', 'employment_type', 'hire_date',
+                        'next_of_kin_name', 'next_of_kin_relationship', 'next_of_kin_phone',
+                        'next_of_kin_email'
+                    ];
+
+                    foreach ($nullableFields as $field) {
+                        if (isset($employeeData[$field]) && $employeeData[$field] === '') {
+                            $employeeData[$field] = null;
+                        }
+                    }
+
+                    // Set default values - use faster hash for bulk import
                     $employeeData['is_active'] = $employeeData['is_active'] ?? true;
-                    $employeeData['password'] = bcrypt($employeeData['email']); // Default password is email
+                    $employeeData['password'] = hash('sha256', $employeeData['email'] . 'default_salt'); // Faster hash for bulk import
 
                     // Create employee
                     Employee::create($employeeData);
@@ -573,6 +685,10 @@ class EmployeeResource extends Resource
             fclose($handle);
             DB::commit();
 
+            if ($errors > 0) {
+                Log::error($errorMessages);
+            }
+
             return [
                 'success' => $success,
                 'errors' => $errors,
@@ -581,6 +697,9 @@ class EmployeeResource extends Resource
 
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error($e->getTrace());
+
             fclose($handle);
             throw $e;
         }
@@ -591,29 +710,30 @@ class EmployeeResource extends Resource
      */
     public static function downloadCsvTemplate(): \Symfony\Component\HttpFoundation\StreamedResponse
     {
+        // Use database column names as headers (keys from the expectedHeaders array)
         $headers = [
-            'Employee Number',
-            'First Name',
-            'Last Name',
-            'Email',
-            'Phone',
-            'National ID',
-            'KRA PIN',
-            'Date of Birth (YYYY-MM-DD)',
-            'Gender (Male/Female)',
-            'Marital Status (Single/Married/Divorced/Widowed)',
-            'Employment Type (Permanent/Contract/Casual)',
-            'Hire Date (YYYY-MM-DD)',
-            'Department Name',
-            'Position Title',
-            'Location Name',
-            'Emergency Contact Name',
-            'Emergency Contact Phone',
-            'Next of Kin Name',
-            'Next of Kin Relationship',
-            'Next of Kin Phone',
-            'Next of Kin Email',
-            'Is Active (true/false)'
+            'employee_number',
+            'first_name',
+            'last_name',
+            'email',
+            'phone',
+            'national_id',
+            'kra_pin',
+            'date_of_birth',
+            'gender',
+            'marital_status',
+            'employment_type',
+            'hire_date',
+            'department_name',
+            'position_title',
+            'location_name',
+            'emergency_contact_name',
+            'emergency_contact_phone',
+            'next_of_kin_name',
+            'next_of_kin_relationship',
+            'next_of_kin_phone',
+            'next_of_kin_email',
+            'is_active'
         ];
 
         $callback = function() use ($headers) {
@@ -625,32 +745,85 @@ class EmployeeResource extends Resource
             // Write headers
             fputcsv($file, $headers);
 
-            // Write sample data
-            $sampleData = [
-                'EMP001',
-                'John',
-                'Doe',
-                'john.doe@example.com',
-                '+254712345678',
-                '12345678',
-                'A123456789B',
-                '1990-01-15',
-                'Male',
-                'Single',
-                'Permanent',
-                '2023-01-01',
-                'IT Department',
-                'Software Developer',
+            // Write multiple sample rows to demonstrate different options
+            $sampleData1 = [
+                'EMP001',                           // employee_number
+                'John',                             // first_name
+                'Doe',                              // last_name
+                'john.doe@example.com',             // email
+                '+254712345678',                    // phone
+                '12345678',                         // national_id
+                'A123456789B',                      // kra_pin
+                '1990-01-15',                       // date_of_birth (YYYY-MM-DD)
+                'Male',                             // gender (Male/Female)
+                'Single',                           // marital_status (Single/Married/Divorced/Widowed)
+                'Permanent',                        // employment_type (Permanent/Contract/Casual)
+                '2023-01-01',                       // hire_date (YYYY-MM-DD)
+                'IT Department',                    // department_name
+                'Software Developer',               // position_title
+                'Nairobi Office',                   // location_name
+                'Jane Doe',                         // emergency_contact_name
+                '+254712345679',                    // emergency_contact_phone
+                'Mary Doe',                         // next_of_kin_name
+                'Mother',                           // next_of_kin_relationship
+                '+254712345680',                    // next_of_kin_phone
+                'mary.doe@example.com',             // next_of_kin_email
+                'true'                              // is_active (true/false)
+            ];
+
+            $sampleData2 = [
+                'EMP002',
+                'Jane',
+                'Smith',
+                'jane.smith@example.com',
+                '+254723456789',
+                '87654321',
+                'B987654321C',
+                '1985-06-20',
+                'Female',                            // Example: Female
+                'Married',                           // Example: Married
+                'Contract',                          // Example: Contract
+                '2022-03-15',
+                'HR Department',
+                'HR Manager',
                 'Nairobi Office',
-                'Jane Doe',
-                '+254712345679',
-                'Mary Doe',
-                'Mother',
-                '+254712345680',
-                'mary.doe@example.com',
+                'John Smith',
+                '+254734567890',
+                'Sarah Smith',
+                'Sister',
+                '+254745678901',
+                'sarah.smith@example.com',
                 'true'
             ];
-            fputcsv($file, $sampleData);
+
+            $sampleData3 = [
+                'EMP003',
+                'Michael',
+                'Johnson',
+                'michael.j@example.com',
+                '+254756789012',
+                '11223344',
+                '',                                  // kra_pin optional
+                '1995-12-10',
+                'Male',
+                'Divorced',                          // Example: Divorced
+                'Casual',                            // Example: Casual
+                '2024-01-10',
+                'Operations',
+                'Attendant',
+                'Mombasa Office',
+                'Lisa Johnson',
+                '+254767890123',
+                'Robert Johnson',
+                'Father',
+                '+254778901234',
+                '',                                  // next_of_kin_email optional
+                'false'                              // Example: inactive employee
+            ];
+
+            fputcsv($file, $sampleData1);
+            fputcsv($file, $sampleData2);
+            fputcsv($file, $sampleData3);
 
             fclose($file);
         };
